@@ -33,7 +33,17 @@ sockets = {
     "skin_buddy_level": "dd3bf334-87f3-40bd-b043-682a57a8dc3a"
 }
 
-
+GAMEMODES = {
+    "deathmatch": "Deathmatch",
+    "competitive": "Competitive",
+    "spikerush": "Spike Rush",
+    "escalation": "Escalation",
+    "replication": "Replication",
+    "unrated": "Unrated",
+    "In Game": "In Game",
+    "In-Menus": "In-Menus",
+    "newmap": "New Map"
+}
 
 AGENTCOLORLIST = {
             "neon": (28, 69, 161),

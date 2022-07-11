@@ -14,6 +14,9 @@ class Table:
             bool(config.table.get("peakrank", True)),  # Peak Rank
             bool(config.table.get("leaderboard", True)),  # Leaderboard Position
             True,  # Level
+            True,  # KDA
+            True,  # KDA
+            True,  # History
         ]
         self.field_names_candidates = [
             "Party",
@@ -25,6 +28,9 @@ class Table:
             "Peak Rank",
             "Pos.",
             "Level",
+            "KDA",
+            "KDA Ratio",
+            "History",
         ]
         self.field_names = [
             c for c, i in zip(self.field_names_candidates, self.row_flags) if i

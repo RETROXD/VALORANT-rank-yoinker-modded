@@ -146,4 +146,87 @@ class Requests:
             }
         return headers
 
+    def get_ranked_history(self, puuid):
+        try:
+            rMatches = requests.request("GET", f"https://pd.{self.region}.a.pvp.net/mmr/v1/players/{puuid}/competitiveupdates?queue=competitive", headers=self.get_headers(), verify=False).json()
+            self.log(f"REQUEST: Got ranked history for {puuid}")
+            last_5_matches = []
+            last_5_match_ids = []
+            if rMatches['Matches'] == []:
+                last_5_matches = [0, 0, 0, 0, 0]
+                last_5_match_ids = ["", "", "", "", ""]
 
+            if len(rMatches['Matches']) >= 5:
+                for i in range(5):
+                    if rMatches["Matches"][i]["RankedRatingEarned"] is not None:
+                        last_5_matches.append(rMatches["Matches"][i]["RankedRatingEarned"])
+                        last_5_match_ids.append(rMatches["Matches"][i]["MatchID"])
+                self.log(f"REQUEST: Retrieved last 5 matches: {last_5_matches}")
+            
+            elif len(rMatches['Matches']) < 5 and len(rMatches['Matches']) > 0:
+                for i in range(len(rMatches['Matches'])):
+                    if rMatches["Matches"][i]["RankedRatingEarned"] is not None:
+                        last_5_matches.append(rMatches["Matches"][i]["RankedRatingEarned"])
+                        last_5_match_ids.append(rMatches["Matches"][i]["MatchID"])
+                self.log(f"REQUEST: Retrieved last 5 matches: {last_5_matches}")
+            else:
+                last_5_matches = [0, 0, 0, 0, 0]
+                last_5_match_ids = ["", "", "", "", ""]
+            
+            return [last_5_matches, last_5_match_ids]
+        except json.decoder.JSONDecodeError:
+            self.log("ERROR :: REQUEST: JSONDecodeError in get_ranked_history function, likely rate limit exceeded")
+            return [[0, 0, 0, 0, 0], ["", "", "", "", ""]]
+
+    def get_match_details(self, match_id):
+        try:
+            match_details = requests.request("GET", f"https://pd.{self.region}.a.pvp.net/match-details/v1/matches/{match_id}", headers=self.get_headers(), verify=False).json()
+            self.log(f"REQUEST: Got match details for {match_id}")
+            if 'httpStatus' in match_details:
+                return ["nomatches"]
+            return match_details
+        except json.decoder.JSONDecodeError:
+            self.log("ERROR :: REQUEST: JSONDecodeError in get_match_details function, likely rate limit exceeded")
+            return ["nomatches"]
+
+    def get_kda(self, puuid, match_ids):
+        try:
+            matches = match_ids
+            self.log(f"REQUEST: Got recent matches for {puuid}")
+            if matches == ["", "", "", "", ""]:
+                return [
+                    [1], 
+                    [1], 
+                    [1]
+                    ]
+            else:
+                # create kda list to store kda values
+                kills = []
+                deaths = []
+                assists = []
+                counter = 0
+                
+                for match in matches:
+                    if counter == 1:
+                        break
+                    match_details = Requests.get_match_details(self, match)
+                    self.log(f"REQUEST: Got match details for {match}")
+                    if match_details == ["nomatches"]:
+                        continue
+                    else:
+                        for match in match_details['players']:
+                            if match['subject'] != puuid:
+                                continue
+                            kills.append(match['stats']['kills'])
+                            deaths.append(match['stats']['deaths'])
+                            assists.append(match['stats']['assists'])
+                            counter += 1
+                self.log(f"REQUEST: Got KDA for {puuid} :: {kills} :: {deaths} :: {assists}")
+                return [kills, deaths, assists]
+        except json.decoder.JSONDecodeError:
+            self.log("ERROR :: REQUEST: JSONDecodeError in get_kda function, likely rate limit exceeded")
+            return [
+                    [1], 
+                    [1], 
+                    [1]
+                    ]

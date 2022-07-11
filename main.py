@@ -144,8 +144,13 @@ try:
                 "PREGAME": color('Agent Select', fore=(103, 237, 76)),
                 "MENUS": color('In-Menus', fore=(238, 241, 54)),
             }
+            getKDA = True
             if game_state == "INGAME":
                 coregame_stats = coregame.get_coregame_stats()
+                if coregame_stats["MatchmakingData"] != None:
+                        match = coregame_stats["MatchmakingData"]["QueueID"]
+                        if coregame_stats["MatchmakingData"]["QueueID"] == "deathmatch" or coregame_stats["MatchmakingData"]["QueueID"] == "spikerush":
+                            getKDA = False
                 Players = coregame_stats["Players"]
                 try:
                     server = GAMEPODS[coregame_stats["GamePodID"]]
@@ -283,6 +288,40 @@ try:
 
                         # LEVEL
                         level = PLcolor
+
+                        # History
+                        puuid = player["Subject"]
+                        history_response = Requests.get_ranked_history(puuid)
+                        history = history_response[0]
+                        history_string = ""
+                        for x in history:
+                            if x > 0:
+                                history_string += color(f"+{x}", fore=(0, 255, 0)) + " "
+                            elif x < 0:
+                                history_string += color(f"{x}", fore=(255, 0, 0)) + " "
+                            else:
+                                history_string += color("?", fore=(255, 255, 255)) + " "
+
+                        # KDA
+                        if getKDA:
+                            try:
+                                kda = Requests.get_kda(puuid, history_response[1])
+                                log(f"MAIN: Got KDA for {puuid}")
+                                kills = kda[0]
+                                average_kills = sum(kills) / len(kills)
+                                deaths = kda[1]
+                                average_deaths = sum(deaths) / len(deaths)
+                                assists = kda[2]
+                                average_assists = sum(assists) / len(assists)
+                                kda_string = f"{average_kills}/{average_deaths}/{average_assists}"
+                                kda_ratio = round(average_kills / average_deaths, 2)
+                            except:
+                                kda_string = "?"
+                                kda_ratio = "?"
+                        else:
+                            kda_string = "N/A"
+                            kda_ratio = 0
+
                         table.add_row_table([party_icon,
                                               agent,
                                               name,
@@ -292,7 +331,10 @@ try:
                                               rr,
                                               peakRank,
                                               leaderboard,
-                                              level
+                                              level,
+                                              kda_string,
+                                              kda_ratio,
+                                              history_string
                                               ])
                         stats.save_data(
                             {
@@ -406,6 +448,22 @@ try:
                         # LEVEL
                         level = PLcolor
 
+                        # History
+                        puuid = player["Subject"]
+                        history = Requests.get_ranked_history(puuid)[0]
+                        history_string = ""
+                        for x in history:
+                            if x > 0:
+                                history_string += color(f"+{x}", fore=(0, 255, 0)) + " "
+                            elif x < 0:
+                                history_string += color(f"{x}", fore=(255, 0, 0)) + " "
+                            else:
+                                history_string += color("?", fore=(255, 255, 255)) + " "
+
+                        # KDA
+                        kda_string = "N/A"
+                        kda_ratio = 0
+
                         table.add_row_table([party_icon,
                                               agent,
                                               name,
@@ -416,6 +474,9 @@ try:
                                               peakRank,
                                               leaderboard,
                                               level,
+                                              kda_string,
+                                              kda_ratio,
+                                              history_string
                                               ])
                         bar()
             if game_state == "MENUS":
@@ -459,6 +520,22 @@ try:
                         # LEVEL
                         level = PLcolor
 
+                        # History
+                        puuid = player["Subject"]
+                        history = Requests.get_ranked_history(puuid)[0]
+                        history_string = ""
+                        for x in history:
+                            if x > 0:
+                                history_string += color(f"+{x}", fore=(0, 255, 0)) + " "
+                            elif x < 0:
+                                history_string += color(f"{x}", fore=(255, 0, 0)) + " "
+                            else:
+                                history_string += color("?", fore=(255, 255, 255)) + " "
+
+                        # KDA
+                        kda_string = "N/A"
+                        kda_ratio = 0
+
                         table.add_row_table([party_icon,
                                               agent,
                                               name,
@@ -467,7 +544,10 @@ try:
                                               rr,
                                               peakRank,
                                               leaderboard,
-                                              level
+                                              level,
+                                              kda_string,
+                                              kda_ratio,
+                                              history_string
                                               ])
                         # table.add_rows([])
                         bar()
